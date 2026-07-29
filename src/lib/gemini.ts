@@ -1,13 +1,7 @@
 import { GoogleGenAI } from '@google/genai';
 import { buildTraderPrompt, buildTeacherPrompt } from './prompts';
 
-// Candidate models in order of priority
-const CANDIDATE_MODELS = [
-  'gemini-2.5-flash',
-  'gemini-2.0-flash',
-  'gemini-1.5-flash',
-  'gemini-1.5-pro',
-];
+const PRIMARY_MODEL = 'gemini-2.0-flash';
 
 export async function analyzeTweet(
   tweetText: string,
@@ -18,7 +12,7 @@ export async function analyzeTweet(
 }> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey || apiKey === 'your_gemini_api_key_here') {
-    throw new Error('GEMINI_API_KEY tanımlanmamış. Lütfen Vercel veya .env dosyasında geçerli bir Gemini API Key ayarlayın.');
+    throw new Error('GEMINI_API_KEY bulunamadı. Lütfen Vercel veya .env.local dosyasında geçerli bir Gemini API Key ayarlayın.');
   }
 
   const genAI = new GoogleGenAI({ apiKey });
@@ -48,30 +42,23 @@ export async function analyzeTweet(
   const traderPrompt = buildTraderPrompt(tweetText);
   const parts: any[] = [...validImages, { text: traderPrompt }];
 
-  // Robust generator trying candidate models sequentially
-  async function generateContentWithCandidates(contents: any[]) {
-    let lastError: any = null;
-    for (const modelName of CANDIDATE_MODELS) {
-      try {
-        const res = await genAI.models.generateContent({
-          model: modelName,
-          contents,
-        });
-        if (res && res.text) return res;
-      } catch (err: any) {
-        console.warn(`Model ${modelName} failed:`, err?.message || err);
-        lastError = err;
+  async function callGemini(contents: any[]) {
+    try {
+      return await genAI.models.generateContent({
+        model: PRIMARY_MODEL,
+        contents,
+      });
+    } catch (err: any) {
+      const errMsg = err?.message || JSON.stringify(err);
+      if (err?.status === 429 || errMsg.includes('429') || errMsg.includes('quota') || errMsg.includes('RESOURCE_EXHAUSTED')) {
+        throw new Error('Gemini API Kotası Doldu (429 Rate Limit): Verilen API Key kotalara takıldı veya günlük limit aşıldı. Lütfen https://aistudio.google.com/app/apikey adresinden "AIzaSy..." ile başlayan yeni bir ücretsiz key oluşturun.');
       }
+      throw new Error(`Gemini API Hatası: ${errMsg}`);
     }
-    const errMsg = lastError?.message || JSON.stringify(lastError);
-    if (errMsg.includes('NOT_FOUND') || errMsg.includes('API_KEY_INVALID') || errMsg.includes('API key')) {
-      throw new Error(`Gemini API Key yetkisiz veya modeller erişilemez. Lütfen https://aistudio.google.com/ adresinden aldığınız geçerli API key'i Vercel'e ekleyin. (Detay: ${errMsg})`);
-    }
-    throw new Error(`Gemini analiz üretemedi: ${errMsg}`);
   }
 
   // 1. Step: Trader Analysis using Gemini Vision
-  const traderResult = await generateContentWithCandidates([{ role: 'user', parts }]);
+  const traderResult = await callGemini([{ role: 'user', parts }]);
   const rawText = traderResult.text || '';
   let traderAnalysis: any = {};
 
@@ -107,7 +94,7 @@ export async function analyzeTweet(
     traderAnalysis.primaryInstrument || 'Piyasa'
   );
 
-  const teacherResult = await generateContentWithCandidates([
+  const teacherResult = await callGemini([
     { role: 'user', parts: [{ text: teacherPrompt }] },
   ]);
 
