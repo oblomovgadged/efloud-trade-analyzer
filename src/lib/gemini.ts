@@ -1,8 +1,13 @@
 import { GoogleGenAI } from '@google/genai';
 import { buildTraderPrompt, buildTeacherPrompt } from './prompts';
 
-const MODEL_NAME = 'gemini-2.0-flash';
-const FALLBACK_MODEL_NAME = 'gemini-1.5-flash';
+// Candidate models in order of priority
+const CANDIDATE_MODELS = [
+  'gemini-2.5-flash',
+  'gemini-2.0-flash',
+  'gemini-1.5-flash',
+  'gemini-1.5-pro',
+];
 
 export async function analyzeTweet(
   tweetText: string,
@@ -12,8 +17,8 @@ export async function analyzeTweet(
   teacherExplanation: string;
 }> {
   const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    throw new Error('GEMINI_API_KEY environment variable is not defined.');
+  if (!apiKey || apiKey === 'your_gemini_api_key_here') {
+    throw new Error('GEMINI_API_KEY tanımlanmamış. Lütfen Vercel veya .env dosyasında geçerli bir Gemini API Key ayarlayın.');
   }
 
   const genAI = new GoogleGenAI({ apiKey });
@@ -43,24 +48,30 @@ export async function analyzeTweet(
   const traderPrompt = buildTraderPrompt(tweetText);
   const parts: any[] = [...validImages, { text: traderPrompt }];
 
-  // Helper for generating content with model fallback
-  async function generateWithFallback(contents: any[]) {
-    try {
-      return await genAI.models.generateContent({
-        model: MODEL_NAME,
-        contents,
-      });
-    } catch (err: any) {
-      console.warn(`Model ${MODEL_NAME} failed, trying ${FALLBACK_MODEL_NAME}:`, err?.message);
-      return await genAI.models.generateContent({
-        model: FALLBACK_MODEL_NAME,
-        contents,
-      });
+  // Robust generator trying candidate models sequentially
+  async function generateContentWithCandidates(contents: any[]) {
+    let lastError: any = null;
+    for (const modelName of CANDIDATE_MODELS) {
+      try {
+        const res = await genAI.models.generateContent({
+          model: modelName,
+          contents,
+        });
+        if (res && res.text) return res;
+      } catch (err: any) {
+        console.warn(`Model ${modelName} failed:`, err?.message || err);
+        lastError = err;
+      }
     }
+    const errMsg = lastError?.message || JSON.stringify(lastError);
+    if (errMsg.includes('NOT_FOUND') || errMsg.includes('API_KEY_INVALID') || errMsg.includes('API key')) {
+      throw new Error(`Gemini API Key yetkisiz veya modeller erişilemez. Lütfen https://aistudio.google.com/ adresinden aldığınız geçerli API key'i Vercel'e ekleyin. (Detay: ${errMsg})`);
+    }
+    throw new Error(`Gemini analiz üretemedi: ${errMsg}`);
   }
 
   // 1. Step: Trader Analysis using Gemini Vision
-  const traderResult = await generateWithFallback([{ role: 'user', parts }]);
+  const traderResult = await generateContentWithCandidates([{ role: 'user', parts }]);
   const rawText = traderResult.text || '';
   let traderAnalysis: any = {};
 
@@ -96,7 +107,7 @@ export async function analyzeTweet(
     traderAnalysis.primaryInstrument || 'Piyasa'
   );
 
-  const teacherResult = await generateWithFallback([
+  const teacherResult = await generateContentWithCandidates([
     { role: 'user', parts: [{ text: teacherPrompt }] },
   ]);
 
