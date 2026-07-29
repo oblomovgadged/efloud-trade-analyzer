@@ -46,7 +46,7 @@ export function Header() {
           <Link href="/" className="btn btn-secondary" style={{ fontSize: '0.875rem' }}>
             📈 Analizler
           </Link>
-          <Link href="/admin" className="btn btn-primary" style={{ fontSize: '0.875rem' }}>
+          <Link href="/" className="btn btn-primary" style={{ fontSize: '0.875rem' }}>
             ➕ Tweet Ekle
           </Link>
         </nav>

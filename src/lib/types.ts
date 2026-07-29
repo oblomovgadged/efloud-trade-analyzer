@@ -79,3 +79,22 @@ export interface AnalysisFilters {
   dateFrom?: string;
   dateTo?: string;
 }
+
+export interface Trader {
+  username: string;
+  displayName: string;
+  twitterUrl: string;
+  addedAt: string;
+  lastAnalyzedAt: string | null;
+}
+
+export interface FetchedTweet {
+  tweetId: string;
+  tweetUrl: string;
+  tweetText: string;
+  imageUrls: string[];
+  tweetDate: string;
+  authorUsername: string;
+  source: 'twitterapi' | 'nitter';
+}
+
