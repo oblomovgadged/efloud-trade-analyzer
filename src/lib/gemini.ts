@@ -1,7 +1,8 @@
 import { GoogleGenAI } from '@google/genai';
 import { buildTraderPrompt, buildTeacherPrompt } from './prompts';
 
-const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+const MODEL_NAME = 'gemini-2.0-flash';
+const FALLBACK_MODEL_NAME = 'gemini-1.5-flash';
 
 export async function analyzeTweet(
   tweetText: string,
@@ -14,6 +15,8 @@ export async function analyzeTweet(
   if (!apiKey) {
     throw new Error('GEMINI_API_KEY environment variable is not defined.');
   }
+
+  const genAI = new GoogleGenAI({ apiKey });
 
   // Fetch images and convert to base64 inline data for Gemini Vision
   const imageContents = await Promise.all(
@@ -37,17 +40,27 @@ export async function analyzeTweet(
   );
 
   const validImages = imageContents.filter((img): img is NonNullable<typeof img> => img !== null);
-
   const traderPrompt = buildTraderPrompt(tweetText);
-
-  // 1. Step: Trader Analysis using Gemini Vision
   const parts: any[] = [...validImages, { text: traderPrompt }];
 
-  const traderResult = await genAI.models.generateContent({
-    model: 'gemini-2.5-flash',
-    contents: [{ role: 'user', parts }],
-  });
+  // Helper for generating content with model fallback
+  async function generateWithFallback(contents: any[]) {
+    try {
+      return await genAI.models.generateContent({
+        model: MODEL_NAME,
+        contents,
+      });
+    } catch (err: any) {
+      console.warn(`Model ${MODEL_NAME} failed, trying ${FALLBACK_MODEL_NAME}:`, err?.message);
+      return await genAI.models.generateContent({
+        model: FALLBACK_MODEL_NAME,
+        contents,
+      });
+    }
+  }
 
+  // 1. Step: Trader Analysis using Gemini Vision
+  const traderResult = await generateWithFallback([{ role: 'user', parts }]);
   const rawText = traderResult.text || '';
   let traderAnalysis: any = {};
 
@@ -83,10 +96,9 @@ export async function analyzeTweet(
     traderAnalysis.primaryInstrument || 'Piyasa'
   );
 
-  const teacherResult = await genAI.models.generateContent({
-    model: 'gemini-2.5-flash',
-    contents: [{ role: 'user', parts: [{ text: teacherPrompt }] }],
-  });
+  const teacherResult = await generateWithFallback([
+    { role: 'user', parts: [{ text: teacherPrompt }] },
+  ]);
 
   const teacherExplanation = teacherResult.text || 'Açıklama oluşturulamadı.';
 
