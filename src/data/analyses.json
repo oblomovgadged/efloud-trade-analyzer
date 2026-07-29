@@ -1,0 +1,84 @@
+[
+  {
+    "id": "efloud-fed-update-20260729",
+    "tweetUrl": "https://x.com/Efloud/status/2082359652059127855",
+    "tweetText": "$DXY & $EURUSD | Update & Fed Faiz Yorumlaması\n\nMerhabalar, Bugün FED'in faiz kararı olması sebebiyle son analizden bu yana olan aksiyonlarıma güncelleme yaparak fikirlerimi aktaracağım.\n\n#DXY'de olan bullish bakış açım şimdilik değişmedi. Geri çekilmesini beklediğim kırmızı aralık efektif çalıştı. Kırmızı kesikli çizginin kazanımı ile 103.7 bölgesi gündemimde daha net şekilde olacak. Bu bilgileri grafik üzerindeki notlardan veya alıntıladığım analizden teyit edebilirsiniz. Şayet endeks düşüş moduna geçerse ilk aşamada 99.8 dikkatimi çeken bölgelerden bir tanesi olacak. Open/Closed Gap yazan kısım kaybedilirse trend değişimi söz konusu olacak 98.5 kısmı ilk aşamada destek olarak çalışabileceğini düşündüğüm bir kısım haline gelecek.\n\n$EUR tarafında ise diyagonal bölgemiz efektif çalışmaya devam ediyor ve resmen fiyat orada direniyor. Bu durum, fiyatta bir yandan flag (bayrak) formasyonunu oluşturuyor. Düşüşün devamlılığında tam olarak şimdilik nereye kadar düşeceğini kestiremesem de kesikli çizginin (1.127) ara bir destek görevi üstlenebileceğini düşünüyorum. Geçtiğimiz analizde 1.15 ve 1.157 olarak iki bölgeyle ilgilendiğimden bahsetmiştim lakin DXY'de oluşan destek sonrası hem GBP hem EUR'da short pozisyonlarım var (normalden daha düşük miktarda riskler alarak).\n\nFed Yorumlaması & Kısa Notlar...\nBugün 21:00'da Fed faiz kararı olacak.",
+    "traderUsername": "@Efloud",
+    "traderDisplayName": "Efloud",
+    "imageUrls": [
+      "https://pbs.twimg.com/media/GSt_EXAMPLE_EUR.jpg",
+      "https://pbs.twimg.com/media/GSt_EXAMPLE_DXY.jpg"
+    ],
+    "analyzedAt": "2026-07-29T22:45:00.000Z",
+    "tweetDate": "2026-07-29T09:32:00.000Z",
+    "analysis": {
+      "instruments": ["EURUSD", "DXY"],
+      "primaryInstrument": "EURUSD",
+      "bias": "bearish",
+      "biasConfidence": 80,
+      "biasReasoning": "DXY tarafındaki Bullish (yükseliş) beklentisi ve EURUSD paritesindeki Bearish Flag (düşüş bayrağı) sıkışması sebebiyle EUR için satış baskısı ön plandadır.",
+      "summary": "Efloud'un son analizine göre DXY yükseliş beklentisini korurken EURUSD tarafında diyagonal destekte oluşan düşüş bayrağı kırılımı riski nedeniyle Short pozisyonlar ağırlıktadır.",
+      "detailedAnalysis": "EURUSD tarafında yükselen diyagonal trend desteği (1.1380 - 1.1390) aktif olarak test ediliyor. Bu yapı fiyatta bir 'Bearish Flag' (düşüş bayrağı) formasyonu oluşturuyor. DXY'nin 103.7 hedefli bullish hareketi EUR üzerinde baskı oluşturuyor. 1.1380 seviyesinin altında kapanışlar düşüşü 1.1270 ara desteğine doğru hızlandırabilir.",
+      "teacherExplanation": "👨‍🏫 **Basit Anlatım:**\n\n- **Dolar Endeksi (DXY)** güçleniyor, bu da Euro'nun Dolar karşısında değer kaybetme riskini artırıyor.\n- **EURUSD Paritesi**, şu an bir **Düşüş Bayrağı (Bearish Flag)** formasyonu içinde. Bu formasyon genelde düşüşün devam edeceğinin bir işaretidir.\n- **Short (Satış) Stratejisi:** Analist yüksek risk almadan short pozisyonda kalmayı tercih ediyor.\n- **Dikkat Edilecek Seviye:** 1.1380 altındaki hareketlerde ilk durak 1.1270 ara desteği olacaktır.",
+      "keyLevels": [
+        {
+          "type": "support",
+          "price": 1.1380,
+          "label": "Mevcut Diyagonal Destek",
+          "description": "Fiyatın üzerinde direndiği trend çizgisi desteği",
+          "strength": "moderate"
+        },
+        {
+          "type": "support",
+          "price": 1.1270,
+          "label": "Ara Destek (Kesikli Çizgi)",
+          "description": "Diyagonal kırılırsa hedef kalacak ilk ara destek",
+          "strength": "moderate"
+        },
+        {
+          "type": "support",
+          "price": 1.0991,
+          "label": "Range High / Ana Likidite Desteği",
+          "description": "Derin düşüş senaryosunda bekleyen ana alıcı bölgesi",
+          "strength": "strong"
+        },
+        {
+          "type": "resistance",
+          "price": 1.1500,
+          "label": "İlk Direnç Seviyesi",
+          "description": "Olası tepki yükselişinde ilk takılacağı bölge",
+          "strength": "strong"
+        },
+        {
+          "type": "resistance",
+          "price": 1.1575,
+          "label": "Ana Direnç Seviyesi",
+          "description": "Önemli satış fırsatı sunabilecek üst direnç",
+          "strength": "strong"
+        }
+      ],
+      "tradingSignals": [
+        {
+          "direction": "short",
+          "entryZone": "1.1380 kırılımı veya 1.1500 - 1.1575 tepki bölgesi",
+          "stopLoss": "1.1610",
+          "takeProfit": ["1.1270", "1.0990"],
+          "riskReward": "1:2.5",
+          "reasoning": "DXY gücü, bearish flag kırılımı ve Fed öncesi risk azaltma."
+        }
+      ],
+      "chartPatterns": [
+        {
+          "name": "Bearish Flag (Düşüş Bayrağı)",
+          "status": "Test Ediliyor",
+          "implication": "Trend yönünde aşağı devam beklentisi"
+        }
+      ],
+      "marketContext": "Fed faiz kararı öncesinde faiz indirimi beklentilerinin ertelenmesi ve Powell/Fed açıklamalarının piyasadaki risk iştahını düşürmesi.",
+      "riskWarnings": [
+        "Fed kararı açıklanırken 21:00'de iki yönlü sert iğne (spike) hareketleri oluşabilir.",
+        "İğneler doğru yön beklentiniz olsa bile stop ettirebilir, riskinizi düşük tutun."
+      ]
+    }
+  }
+]
