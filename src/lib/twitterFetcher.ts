@@ -30,30 +30,37 @@ async function fetchViaTwitterApi(username: string): Promise<FetchedTweet[]> {
   }
 
   const data = await response.json();
-  const tweets = data.tweets || data.data || [];
+  // Properly extract tweet array from TwitterAPI.io response structure: data.data.tweets
+  const rawTweets: any[] = Array.isArray(data.data?.tweets)
+    ? data.data.tweets
+    : Array.isArray(data.tweets)
+    ? data.tweets
+    : Array.isArray(data.data)
+    ? data.data
+    : Array.isArray(data)
+    ? data
+    : [];
 
-  return tweets
-    .filter((t: any) => {
-      // Only tweets with image media
-      const media = t.extendedEntities?.media || t.media || t.entities?.media || [];
-      return media.some((m: any) => m.type === 'photo' || (m.media_url_https && !m.video_info));
-    })
+  return rawTweets
     .map((t: any) => {
-      const media = t.extendedEntities?.media || t.media || t.entities?.media || [];
-      const imageUrls = media
-        .filter((m: any) => m.type === 'photo' || (m.media_url_https && !m.video_info))
-        .map((m: any) => m.media_url_https || m.url || m.media_url);
+      // Find media items in extendedEntities or media or entities
+      const mediaList = t.extendedEntities?.media || t.media || t.entities?.media || [];
+      const imageUrls = mediaList
+        .filter((m: any) => m.type === 'photo' || (m.media_url_https && m.type !== 'video' && m.type !== 'animated_gif'))
+        .map((m: any) => m.media_url_https || m.url || m.media_url)
+        .filter(Boolean);
 
       return {
-        tweetId: t.id || t.id_str || String(t.tweetId || ''),
-        tweetUrl: `https://x.com/${username}/status/${t.id || t.id_str || t.tweetId || ''}`,
+        tweetId: String(t.id || t.id_str || ''),
+        tweetUrl: t.url || t.twitterUrl || `https://x.com/${username}/status/${t.id || t.id_str || ''}`,
         tweetText: t.text || t.full_text || t.rawContent || '',
         imageUrls,
-        tweetDate: t.created_at || t.createdAt || new Date().toISOString(),
+        tweetDate: t.createdAt || t.created_at || new Date().toISOString(),
         authorUsername: username,
         source: 'twitterapi' as const,
       };
-    });
+    })
+    .filter((t) => t.imageUrls.length > 0); // Strictly filter for tweets containing chart images
 }
 
 // FALLBACK: Nitter RSS
@@ -65,9 +72,8 @@ async function fetchViaNitter(username: string): Promise<FetchedTweet[]> {
       if (!response.ok) continue;
 
       const xml = await response.text();
-      // Simple RSS XML parsing
       const items = xml.match(/<item>[\s\S]*?<\/item>/g) || [];
-      
+
       const results: FetchedTweet[] = [];
       for (const item of items) {
         const titleMatch = item.match(/<title><!\[CDATA\[([\s\S]*?)\]\]><\/title>/) || item.match(/<title>([\s\S]*?)<\/title>/);
@@ -76,14 +82,15 @@ async function fetchViaNitter(username: string): Promise<FetchedTweet[]> {
         const dateMatch = item.match(/<pubDate>([\s\S]*?)<\/pubDate>/);
 
         const description = descMatch?.[1] || '';
-        // Find image URLs in description HTML
         const imgMatches = description.match(/src="(https:\/\/[^"]+\.(jpg|jpeg|png|webp)[^"]*)"/gi) || [];
-        const imageUrls = imgMatches.map((m: string) => {
-          const urlMatch = m.match(/src="([^"]+)"/);
-          return urlMatch?.[1] || '';
-        }).filter(Boolean);
+        const imageUrls = imgMatches
+          .map((m: string) => {
+            const urlMatch = m.match(/src="([^"]+)"/);
+            return urlMatch?.[1] || '';
+          })
+          .filter(Boolean);
 
-        if (imageUrls.length === 0) continue; // Only chart tweets
+        if (imageUrls.length === 0) continue;
 
         const tweetUrl = linkMatch?.[1] || '';
         const tweetIdMatch = tweetUrl.match(/status\/(\d+)/);
@@ -109,9 +116,8 @@ async function fetchViaNitter(username: string): Promise<FetchedTweet[]> {
 
 // MAIN EXPORT: Fetch latest chart tweet with fallback
 export async function fetchLatestChartTweet(username: string): Promise<FetchedTweet | null> {
-  // Clean username
   const cleanUsername = username.replace(/^@/, '').trim();
-  
+
   // Try TwitterAPI.io first
   try {
     const tweets = await fetchViaTwitterApi(cleanUsername);
@@ -129,21 +135,4 @@ export async function fetchLatestChartTweet(username: string): Promise<FetchedTw
   }
 
   return null;
-}
-
-export async function fetchAllChartTweets(username: string): Promise<FetchedTweet[]> {
-  const cleanUsername = username.replace(/^@/, '').trim();
-  
-  try {
-    const tweets = await fetchViaTwitterApi(cleanUsername);
-    if (tweets.length > 0) return tweets;
-  } catch (err) {
-    console.warn('TwitterAPI.io failed:', err);
-  }
-
-  try {
-    return await fetchViaNitter(cleanUsername);
-  } catch {
-    return [];
-  }
 }
