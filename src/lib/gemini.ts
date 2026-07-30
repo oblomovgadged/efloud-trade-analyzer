@@ -1,5 +1,5 @@
 import { GoogleGenAI } from '@google/genai';
-import { buildTraderPrompt, buildTeacherPrompt } from './prompts';
+import { buildUnifiedTraderPrompt } from './prompts';
 
 const PRIMARY_MODEL = 'gemini-2.0-flash';
 
@@ -17,7 +17,7 @@ export async function analyzeTweet(
 
   const genAI = new GoogleGenAI({ apiKey });
 
-  // Fetch images and convert to base64 inline data for Gemini Vision
+  // Fetch images and convert to base64 inline data for Gemini Vision (optimized size)
   const imageContents = await Promise.all(
     imageUrls.map(async (url) => {
       try {
@@ -39,8 +39,8 @@ export async function analyzeTweet(
   );
 
   const validImages = imageContents.filter((img): img is NonNullable<typeof img> => img !== null);
-  const traderPrompt = buildTraderPrompt(tweetText);
-  const parts: any[] = [...validImages, { text: traderPrompt }];
+  const unifiedPrompt = buildUnifiedTraderPrompt(tweetText);
+  const parts: any[] = [...validImages, { text: unifiedPrompt }];
 
   async function callGemini(contents: any[]) {
     try {
@@ -57,15 +57,17 @@ export async function analyzeTweet(
     }
   }
 
-  // 1. Step: Trader Analysis using Gemini Vision
-  const traderResult = await callGemini([{ role: 'user', parts }]);
-  const rawText = traderResult.text || '';
+  // SINGLE API CALL for both Trader Analysis and Teacher Explanation
+  const result = await callGemini([{ role: 'user', parts }]);
+  const rawText = result.text || '';
   let traderAnalysis: any = {};
+  let teacherExplanation = '';
 
   try {
     const jsonMatch = rawText.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       traderAnalysis = JSON.parse(jsonMatch[0]);
+      teacherExplanation = traderAnalysis.teacherExplanation || '';
     } else {
       traderAnalysis = {
         summary: rawText,
@@ -75,6 +77,7 @@ export async function analyzeTweet(
         bias: 'neutral',
         biasConfidence: 50,
       };
+      teacherExplanation = rawText;
     }
   } catch (e) {
     console.error('Failed to parse JSON from Gemini response:', e);
@@ -86,19 +89,8 @@ export async function analyzeTweet(
       bias: 'neutral',
       biasConfidence: 50,
     };
+    teacherExplanation = rawText;
   }
-
-  // 2. Step: Teacher Explanation
-  const teacherPrompt = buildTeacherPrompt(
-    traderAnalysis.detailedAnalysis || traderAnalysis.summary || tweetText,
-    traderAnalysis.primaryInstrument || 'Piyasa'
-  );
-
-  const teacherResult = await callGemini([
-    { role: 'user', parts: [{ text: teacherPrompt }] },
-  ]);
-
-  const teacherExplanation = teacherResult.text || 'Açıklama oluşturulamadı.';
 
   return { traderAnalysis, teacherExplanation };
 }

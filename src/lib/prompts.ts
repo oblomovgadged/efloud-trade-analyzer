@@ -1,11 +1,11 @@
-export function buildTraderPrompt(tweetText: string): string {
-  return `Sen profesyonel bir forex/kripto trader ve teknik analistsin. 
+export function buildUnifiedTraderPrompt(tweetText: string): string {
+  return `Sen profesyonel bir forex/kripto trader, teknik analist ve aynı zamanda harika bir öğretmensin. 
 Aşağıda bir trader'ın paylaştığı tweet metni ve grafik görseli (veya görselleri) var.
 
 ## Görevin:
 1. Grafik görselini dikkatle incele — üzerindeki fiyat seviyelerini, kesikli çizgileri, kutuları, formasyonları ve yazılı notları oku.
 2. Tweet metnini analiz et.
-3. Aşağıdaki JSON formatında tam bir teknik analiz çıkar.
+3. Aşağıdaki JSON formatında hem profesyonel teknik analizi hem de yeni başlayanlar için eğitici açıklamayı TEK SEFERDE çıkar.
 
 ## Tweet Metni:
 """
@@ -23,6 +23,7 @@ SADECE geçerli bir JSON objesi döndür, markdown kod bloğu dışında hiçbir
   "biasReasoning": "DXY'deki bullish ivme ve EURUSD'deki diyagonal destek zorlanması nedeniyle...",
   "summary": "2-3 cümlelik öz anlatım ile ana fikir.",
   "detailedAnalysis": "Paragraf halinde detaylı teknik analiz. Formasyonlar, seviyeler, trend yapısı ve teknik detaylar.",
+  "teacherExplanation": "# 📚 Öğretmen Notu & Basit Açıklama\n\nBu analizi yeni başlayan biri için 📈📉🎯 emojileriyle, karmaşık terimleri parantez içinde açıklayarak (örn. Bearish Flag: Düşüş Bayrağı) ve 'Ne Yapmalı?' özeti sunarak açıklayan eğitici Türkçe metin.",
   "keyLevels": [
     {
       "type": "support",
@@ -64,24 +65,14 @@ SADECE geçerli bir JSON objesi döndür, markdown kod bloğu dışında hiçbir
 - Fiyat seviyelerini (numbers) tam veya yaklaşık sayısal değerler olarak yaz.
 - Grafikteki Türkçe veya İngilizce tüm metin notlarını oku.
 - Bias mutlaka 'bullish', 'bearish' veya 'neutral' olmalı.
+- teacherExplanation alanı mutlaka detaylı, anlaşılır ve emojili Türkçe eğitim anlatımı içermeli.
 - SADECE JSON objesi döndür.`;
 }
 
+export function buildTraderPrompt(tweetText: string): string {
+  return buildUnifiedTraderPrompt(tweetText);
+}
+
 export function buildTeacherPrompt(traderAnalysis: string, instrument: string): string {
-  return `Sen deneyimli ve samimi bir trading eğitmenisin.
-Aşağıda profesyonel bir analistin ${instrument} için hazırladığı teknik analiz var.
-
-Bu analizi, piyasaya yeni başlayan birinin kolayca anlayabileceği, anlaşılır ve eğitici bir dille açıkla.
-
-## Analiz Metni:
-"""
-${traderAnalysis}
-"""
-
-## Açıklama Rehberin:
-1. Karmaşık terimleri parantez içinde kısaca açıkla (örn. "Bearish Flag (Düşüş Bayrağı): Fiyatın düşmeye devam edeceğini gösteren bayrak şeklindeki formasyon").
-2. "Ne Yapmalı?" başlığı altında trader'ın stratejisini basitçe özetle.
-3. Emojilerle (📈📉🎯⚠️🟢🔴) okunabilirliği artır.
-4. Sonuna samimi bir risk uyarısı ekle.
-5. Türkçe yanıt ver. Markdown biçiminde olsun.`;
+  return '';
 }
